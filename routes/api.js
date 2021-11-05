@@ -18,7 +18,7 @@ module.exports = function (app) {
         replies: [],
       });
       BoardModel.findOne({ name: board }, (err, Boarddata) => {
-        if (err || !Boarddata) {
+        if (!Boarddata) {
           const newBoard = new BoardModel({
             name: board,
             threads: [],
@@ -46,7 +46,7 @@ module.exports = function (app) {
     .get((req, res) => {
       const board = req.params.board;
       BoardModel.findOne({ name: board }, (err, data) => {
-        if (err || !data) {
+        if (!data) {
           res.json({ error: "No board with this name" });
         } else {
           const threads = data.threads.map((thread) => {
@@ -75,11 +75,10 @@ module.exports = function (app) {
       });
     })
     .put((req, res) => {
-      console.log("put", req.body);
-      const { thread_id } = req.body;
+      const { report_id } = req.body;
       const board = req.params.board;
       BoardModel.findOne({ name: board }, (err, boardData) => {
-        if (!boardData || err) {
+        if (!boardData) {
           res.json("error", "Board not found");
         } else {
           const date = new Date();
@@ -93,7 +92,6 @@ module.exports = function (app) {
       });
     })
     .delete((req, res) => {
-      console.log("delete", req.body);
       const { thread_id, delete_password } = req.body;
       const board = req.params.board;
       BoardModel.findOne({ name: board }, (err, boardData) => {
@@ -114,11 +112,10 @@ module.exports = function (app) {
       });
     });
 
-  app
-    .route("/api/replies/:board")
-    .post((req, res) => {
+  app.route("/api/replies/:board").post((req, res) => {
+    console.log("thread", req.body);
       const { text, delete_password, thread_id } = req.body;
-      const board = req.body.params;
+      const board = req.params.board;
       const newReply = new ReplyModel({
         text: text,
         delete_password: delete_password,
@@ -141,8 +138,10 @@ module.exports = function (app) {
       const board = req.params.board;
       BoardModel.findOne({ name: board }, (err, data) => {
         if (!data) {
+          console.log("No board with this name");
           res.json({ error: "No board with this name" });
         } else {
+          console.log("data", data)
           const thread = data.threads.id(req.query.thread_id);
           res.json(thread);
         }
@@ -153,15 +152,17 @@ module.exports = function (app) {
       const board = req.params.board;
       BoardModel.findOne({ name: board }, (err, data) => {
         if (!data) {
+          console.log("No board with this name");
           res.json({ error: "No board with this name" });
         } else {
+          console.log("data", data);
           let thread = data.threads.id(thread_id);
           let reply = thread.replies.id(reply_id);
           reply.reported = true;
           reply.bumped_on = new Date();
           data.save((err, updatedDate) => {
             if (!err) {
-              res.json("Success");
+              res.send("Success");
             }
           });
         }
@@ -169,13 +170,17 @@ module.exports = function (app) {
     })
     .delete((req, res) => {
       const { thread_id, reply_id, delete_password } = req.body;
+      console.log("delete reply body", req.body);
       const board = req.params.board;
       BoardModel.findOne({ name: board }, (err, data) => {
         if (!data) {
+          
           res.json({ error: "No board with this name" });
         } else {
+          
           let thread = data.threads.id(thread_id);
           let reply = thread.replies.id(reply_id);
+          console.log("reply", reply)
           if (reply.delete_password === delete_password) {
             reply.remove();
           } else {

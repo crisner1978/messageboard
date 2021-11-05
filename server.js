@@ -18,7 +18,7 @@ app.use(helmet({
     action: "sameorigin",
   },
   referrerPolicy: {
-    policy: ["origin", "same-origin"],
+    policy: "same-origin",
   }
 }))
 app.use(bodyParser.json());
